@@ -655,4 +655,181 @@ contract SkyOddsTest is Test {
         market.placeBet(flightId, outcome, position, cost);
         vm.stopPrank();
     }
+
+    // ============ calculateWinnings Tests ============
+
+    function testCalculateWinningsBeforeResolution() public {
+        _placeBet(user1, SkyOdds.Outcome.OnTime, SkyOdds.Position.YES, 100e6);
+
+        (uint256 payout, uint256 fee, bool canClaim) = market.calculateWinnings(flightId, user1);
+
+        assertEq(payout, 0, "Payout should be 0 before resolution");
+        assertEq(fee, 0, "Fee should be 0 before resolution");
+        assertFalse(canClaim, "Cannot claim before resolution");
+    }
+
+    function testCalculateWinningsForWinner() public {
+        _placeBet(user1, SkyOdds.Outcome.OnTime, SkyOdds.Position.YES, 100e6);
+
+        // Resolve
+        vm.warp(marketCloseTime + 1);
+        vm.prank(oracleResolver);
+        market.resolveMarket(flightId, SkyOdds.Outcome.OnTime);
+
+        (uint256 payout, uint256 fee, bool canClaim) = market.calculateWinnings(flightId, user1);
+
+        assertEq(payout, 98e6, "Winner should get ~98 USDC (100 - 2% fee)");
+        assertEq(fee, 2e6, "Fee should be 2 USDC");
+        assertTrue(canClaim, "Winner can claim");
+    }
+
+    function testCalculateWinningsForLoser() public {
+        _placeBet(user1, SkyOdds.Outcome.OnTime, SkyOdds.Position.YES, 100e6);
+
+        // Resolve to different outcome
+        vm.warp(marketCloseTime + 1);
+        vm.prank(oracleResolver);
+        market.resolveMarket(flightId, SkyOdds.Outcome.Delayed30);
+
+        (uint256 payout, uint256 fee, bool canClaim) = market.calculateWinnings(flightId, user1);
+
+        assertEq(payout, 0, "Loser should get 0");
+        assertEq(fee, 0, "Loser pays no fee");
+        assertFalse(canClaim, "Loser cannot claim");
+    }
+
+    function testCalculateWinningsWithMultipleWinners() public {
+        _placeBet(user1, SkyOdds.Outcome.OnTime, SkyOdds.Position.YES, 100e6);
+        _placeBet(user2, SkyOdds.Outcome.OnTime, SkyOdds.Position.YES, 200e6);
+
+        // Resolve
+        vm.warp(marketCloseTime + 1);
+        vm.prank(oracleResolver);
+        market.resolveMarket(flightId, SkyOdds.Outcome.OnTime);
+
+        // User1 bet 100, User2 bet 200, total 300
+        // Prize pool: 300 * 0.98 = 294
+        // User1 share: 100/300 * 294 = 98
+        // User2 share: 200/300 * 294 = 196
+
+        (uint256 payout1, uint256 fee1, bool canClaim1) = market.calculateWinnings(flightId, user1);
+        (uint256 payout2, uint256 fee2, bool canClaim2) = market.calculateWinnings(flightId, user2);
+
+        assertApproxEqRel(payout1, 98e6, 0.01e18, "User1 should get ~98 USDC");
+        assertApproxEqRel(payout2, 196e6, 0.01e18, "User2 should get ~196 USDC");
+        assertApproxEqRel(fee1, 2e6, 0.01e18, "User1 fee ~2 USDC");
+        assertApproxEqRel(fee2, 4e6, 0.01e18, "User2 fee ~4 USDC");
+        assertTrue(canClaim1 && canClaim2, "Both can claim");
+    }
+
+    function testCalculateWinningsAfterClaiming() public {
+        _placeBet(user1, SkyOdds.Outcome.OnTime, SkyOdds.Position.YES, 100e6);
+
+        // Resolve
+        vm.warp(marketCloseTime + 1);
+        vm.prank(oracleResolver);
+        market.resolveMarket(flightId, SkyOdds.Outcome.OnTime);
+
+        // Claim
+        vm.prank(user1);
+        market.claimWinnings(flightId);
+
+        // Check again
+        (uint256 payout, uint256 fee, bool canClaim) = market.calculateWinnings(flightId, user1);
+
+        assertEq(payout, 0, "No payout after claiming");
+        assertEq(fee, 0, "No fee after claiming");
+        assertFalse(canClaim, "Cannot claim twice");
+    }
+
+    function testCalculateWinningsNoPosition() public {
+        // Don't place any bet
+
+        // Resolve
+        vm.warp(marketCloseTime + 1);
+        vm.prank(oracleResolver);
+        market.resolveMarket(flightId, SkyOdds.Outcome.OnTime);
+
+        (uint256 payout, uint256 fee, bool canClaim) = market.calculateWinnings(flightId, user1);
+
+        assertEq(payout, 0, "No position = no payout");
+        assertEq(fee, 0, "No position = no fee");
+        assertFalse(canClaim, "Cannot claim without position");
+    }
+
+    function testCalculateWinningsNOPosition() public {
+        // User bets NO on Delayed30, market resolves to OnTime
+        _placeBet(user1, SkyOdds.Outcome.Delayed30, SkyOdds.Position.NO, 100e6);
+
+        // Resolve to OnTime (user bet NO on Delayed30, so they win)
+        vm.warp(marketCloseTime + 1);
+        vm.prank(oracleResolver);
+        market.resolveMarket(flightId, SkyOdds.Outcome.OnTime);
+
+        (uint256 payout,, bool canClaim) = market.calculateWinnings(flightId, user1);
+
+        assertApproxEqRel(payout, 98e6, 0.01e18, "NO position should win");
+        assertTrue(canClaim, "NO winner can claim");
+    }
+
+    function testCalculateWinningsMatchesActualClaim() public {
+        _placeBet(user1, SkyOdds.Outcome.OnTime, SkyOdds.Position.YES, 100e6);
+
+        // Resolve
+        vm.warp(marketCloseTime + 1);
+        vm.prank(oracleResolver);
+        market.resolveMarket(flightId, SkyOdds.Outcome.OnTime);
+
+        // Calculate
+        (uint256 expectedPayout,, bool canClaim) = market.calculateWinnings(flightId, user1);
+
+        assertTrue(canClaim, "Should be able to claim");
+
+        // Claim
+        uint256 balanceBefore = token.balanceOf(user1);
+        vm.prank(user1);
+        market.claimWinnings(flightId);
+        uint256 balanceAfter = token.balanceOf(user1);
+
+        uint256 actualPayout = balanceAfter - balanceBefore;
+
+        assertEq(actualPayout, expectedPayout, "Calculate should match actual claim");
+    }
+
+    function testCalculateWinningsComplexScenario() public {
+        // Multiple users, mixed positions
+        _placeBet(user1, SkyOdds.Outcome.OnTime, SkyOdds.Position.YES, 100e6);
+        _placeBet(user2, SkyOdds.Outcome.Delayed30, SkyOdds.Position.YES, 150e6);
+        _placeBet(user3, SkyOdds.Outcome.OnTime, SkyOdds.Position.NO, 200e6);
+        _placeBet(user4, SkyOdds.Outcome.Cancelled, SkyOdds.Position.YES, 50e6);
+
+        // Total: 500 USDC
+        // Resolve to Delayed30
+        vm.warp(marketCloseTime + 1);
+        vm.prank(oracleResolver);
+        market.resolveMarket(flightId, SkyOdds.Outcome.Delayed30);
+
+        // Winners: user2 (YES on Delayed30) + user3 (NO on OnTime)
+        // Total winning cost: 150 + 200 = 350
+        // Prize pool: 500 * 0.98 = 490
+        // user2 payout: 150/350 * 490 = 210
+        // user3 payout: 200/350 * 490 = 280
+
+        (uint256 payout1,, bool canClaim1) = market.calculateWinnings(flightId, user1);
+        (uint256 payout2,, bool canClaim2) = market.calculateWinnings(flightId, user2);
+        (uint256 payout3,, bool canClaim3) = market.calculateWinnings(flightId, user3);
+        (uint256 payout4,, bool canClaim4) = market.calculateWinnings(flightId, user4);
+
+        assertEq(payout1, 0, "User1 lost");
+        assertFalse(canClaim1, "User1 cannot claim");
+
+        assertApproxEqRel(payout2, 210e6, 0.01e18, "User2 should get ~210 USDC");
+        assertTrue(canClaim2, "User2 can claim");
+
+        assertApproxEqRel(payout3, 280e6, 0.01e18, "User3 should get ~280 USDC");
+        assertTrue(canClaim3, "User3 can claim");
+
+        assertEq(payout4, 0, "User4 lost");
+        assertFalse(canClaim4, "User4 cannot claim");
+    }
 }

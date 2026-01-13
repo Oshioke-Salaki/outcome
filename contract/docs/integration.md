@@ -3,7 +3,7 @@
 ## Contract Addresses
 
 **Mantle Testnet:**
-- **SkyOdds Market:** `0x6bB34Ad2268F11d93CCD065a4D79826584948B03`
+- **SkyOdds Market:** `0x431119E3f9A2108B0D53BF3Ebbba057bFdF552d7`
 - **Mock USDC Token:** `0xAB6a56DA5c42976953FE245F478f0b183B2479BF`
 - **Chain ID:** `5003`
 - **RPC URL:** `https://rpc.testnet.mantle.xyz`
@@ -238,6 +238,20 @@ User Places a Bet.
 
 ---
 
+### **calculateWinnings**
+Preview winnings before claiming.
+
+**Arguments:**
+- `flightId` (bytes32)
+- `user` (address) - User's wallet address
+
+**Returns:**
+- `payout` (uint256) - Amount user would receive in USDC (6 decimals)
+- `fee` (uint256) - Platform fee that would be deducted (6 decimals)
+- `canClaim` (bool) - Whether user is eligible to claim
+
+**Use Case:** Show expected payout before user claims
+
 ### **claimWinnings**
 Claim your winnings after market resolves.
 
@@ -437,9 +451,9 @@ Pause or unpause the contract (Default admin only).
 
 ### **User Claims Winnings**
 1. Check market is resolved: `getFlightInfo(flightId)` - verify `outcome != 0`
-2. Check user hasn't claimed: `hasClaimed(flightId, userAddress)`
-3. Calculate if user won (compare their positions to resolved outcome)
-4. If won, show "Claim" button
+2. **Preview winnings: `calculateWinnings(flightId, userAddress)`**
+3. Check user hasn't claimed: `hasClaimed(flightId, userAddress)` (or use `canClaim` from step 2)
+4. If `canClaim` is true, show "Claim X USDC" button
 5. Call `claimWinnings(flightId)`
 
 ### **Display Market List**

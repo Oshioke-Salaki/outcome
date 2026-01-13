@@ -358,45 +358,40 @@ contract SkyOdds is Ownable, ReentrancyGuard, Pausable, AccessControl {
     }
 
     /**
+     * @notice Preview potential winnings without claiming
+     * @return payout Amount user would receive if they claim now
+     * @return fee Platform fee that would be deducted
+     * @return canClaim Whether user is eligible to claim
+     */
+    function calculateWinnings(bytes32 flightId, address user)
+        external
+        view
+        returns (uint256 payout, uint256 fee, bool canClaim)
+    {
+        (uint256 _payout, uint256 _fee, bool success,) = _calculateWinningsInternal(flightId, user);
+        return (_payout, _fee, success);
+    }
+
+    /**
      * @notice Claim winnings using COST-BASED payout (hybrid model)
      * @dev Shares are used for pricing, cost determines payout split
      */
     function claimWinnings(bytes32 flightId) external nonReentrant marketExists(flightId) {
-        Flight storage flight = flights[flightId];
-        require(flight.outcome != Outcome.Unresolved, "Market not resolved");
-        require(!hasClaimed[flightId][msg.sender], "Already claimed");
+        (uint256 payout, uint256 fee, bool success, string memory errorMsg) =
+            _calculateWinningsInternal(flightId, msg.sender);
 
-        UserPosition storage userPos = positions[flightId][msg.sender];
-        require(userPos.totalCost > 0, "No position");
+        require(success, errorMsg);
 
-        // Check if user won
-        bool hasWon = _didUserWin(flightId, msg.sender, flight.outcome);
-        require(hasWon, "No winnings");
-
-        // Calculate total cost of ALL winners in this market
-        uint256 totalWinningCost = totalCostByOutcome[flightId][flight.outcome];
-        require(totalWinningCost > 0, "No winning cost");
-
-        // Calculate prize pool (total pool minus 2% platform fee)
-        uint256 totalPool = totalPoolAmount[flightId];
-        uint256 platformFee = (totalPool * PLATFORM_FEE) / BASIS_POINTS;
-        uint256 prizePool = totalPool - platformFee;
-
-        // User gets proportional share based on their COST, not shares
-        uint256 payout = (userPos.totalCost * prizePool) / totalWinningCost;
-
-        // Calculate user's proportional fee contribution
-        uint256 userFeeShare = (userPos.totalCost * platformFee) / totalWinningCost;
-
+        // Mark as claimed
         hasClaimed[flightId][msg.sender] = true;
 
         // Transfer payout to user
         require(USDCToken.transfer(msg.sender, payout), "Transfer failed");
 
-        // track fees
-        totalFeesCollected += userFeeShare;
+        // Track fees
+        totalFeesCollected += fee;
 
-        emit WinningsClaimed(flightId, msg.sender, payout, userFeeShare);
+        emit WinningsClaimed(flightId, msg.sender, payout, fee);
     }
 
     function cancelMarket(bytes32 flightId, string memory reason) external onlyRole(ADMIN_ROLE) marketExists(flightId) {
@@ -683,5 +678,60 @@ contract SkyOdds is Ownable, ReentrancyGuard, Pausable, AccessControl {
         }
 
         return (newQ1, newQ2, newQ3, newQ4);
+    }
+
+    // ============ Add after existing internal functions ============
+
+    /**
+     * @notice Internal function to calculate winnings
+     * @return payout Amount user would receive
+     * @return fee Platform fee amount
+     * @return success Whether calculation succeeded
+     * @return errorMsg Error message if failed
+     */
+    function _calculateWinningsInternal(bytes32 flightId, address user)
+        internal
+        view
+        returns (uint256 payout, uint256 fee, bool success, string memory errorMsg)
+    {
+        Flight storage flight = flights[flightId];
+
+        // Check if market is resolved
+        if (flight.outcome == Outcome.Unresolved) {
+            return (0, 0, false, "Market not resolved");
+        }
+
+        // Check if already claimed
+        if (hasClaimed[flightId][user]) {
+            return (0, 0, false, "Already claimed");
+        }
+
+        // Check if user has position
+        UserPosition storage userPos = positions[flightId][user];
+        if (userPos.totalCost == 0) {
+            return (0, 0, false, "No position");
+        }
+
+        // Check if user won
+        bool hasWon = _didUserWin(flightId, user, flight.outcome);
+        if (!hasWon) {
+            return (0, 0, false, "No winnings");
+        }
+
+        // Calculate total winning cost
+        uint256 totalWinningCost = totalCostByOutcome[flightId][flight.outcome];
+        if (totalWinningCost == 0) {
+            return (0, 0, false, "No winning cost");
+        }
+
+        // Calculate prize pool and payout
+        uint256 totalPool = totalPoolAmount[flightId];
+        uint256 platformFee = (totalPool * PLATFORM_FEE) / BASIS_POINTS;
+        uint256 prizePool = totalPool - platformFee;
+
+        payout = (userPos.totalCost * prizePool) / totalWinningCost;
+        fee = (userPos.totalCost * platformFee) / totalWinningCost;
+
+        return (payout, fee, true, "");
     }
 }
