@@ -1,17 +1,7 @@
 "use client";
-
-import React from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import {
-  ArrowRight,
-  Plane,
-  Shield,
-  Zap,
-  TrendingUp,
-  Globe,
-  ArrowUpRight,
-} from "lucide-react";
+import { ArrowRight, Plane, Shield, Zap, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -34,7 +24,7 @@ export default function LandingPage() {
           <div className="bg-black text-white p-1 rounded-sm">
             <Plane className="w-4 h-4 transform -rotate-45" />
           </div>
-          <span className="text-lg font-bold tracking-tight">SkyOdds</span>
+          <span className="text-lg font-bold tracking-tight">Outcome</span>
         </div>
 
         <div className="hidden md:flex items-center gap-8 text-sm font-medium text-zinc-500">
@@ -224,7 +214,10 @@ export default function LandingPage() {
       </main>
 
       {/* --- FEATURES GRID (Bento Box Style) --- */}
-      <section id="features" className="py-32 px-6 bg-zinc-50 border-t border-zinc-200">
+      <section
+        id="features"
+        className="py-32 px-6 bg-zinc-50 border-t border-zinc-200"
+      >
         <div className="max-w-7xl mx-auto">
           <div className="mb-16">
             <h2 className="text-3xl font-bold tracking-tight mb-4">
@@ -287,7 +280,7 @@ export default function LandingPage() {
       <footer className="py-12 border-t border-zinc-200 bg-white text-center">
         <div className="flex items-center justify-center gap-2 mb-4 opacity-50">
           <Plane className="w-4 h-4" />
-          <span className="font-bold tracking-tight">SkyOdds</span>
+          <span className="font-bold tracking-tight">Outcome</span>
         </div>
         <p className="text-zinc-400 text-xs">
           Built for the AI & Privacy Hackathon 2025. Running on Mantle Network.

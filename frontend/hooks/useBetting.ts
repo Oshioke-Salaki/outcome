@@ -4,12 +4,12 @@ import { useState } from "react";
 import { useWallets } from "@particle-network/connectkit";
 import { parseUnits, encodeFunctionData } from "viem";
 import { toast } from "sonner";
-import { mockUsdcAbi, skyOddsAddress } from "@/hooks/generated"; // Your contract address
+import {
+  mockUsdcAbi,
+  mockUsdcAddress,
+  skyOddsAddress,
+} from "@/hooks/generated"; // Your contract address
 import skyOddsAbi from "@/app/abis/SkyOdds.json"; // Ensure path is correct
-
-// Hardcode USDC address or import it
-const MOCK_USDC_ADDRESS = "0xFAEC032f2E8c85Da9d04b06947a6BdCf02Ad7a71";
-const MANTLE_SEPOLIA_ID = 5003;
 
 export function usePlaceBet() {
   const [primaryWallet] = useWallets(); // Get Particle Wallet
@@ -43,7 +43,7 @@ export function usePlaceBet() {
       });
 
       const approveTx = await walletClient.sendTransaction({
-        to: MOCK_USDC_ADDRESS,
+        to: mockUsdcAddress,
         data: approveData,
         account: account as `0x${string}`,
         chain: undefined,
