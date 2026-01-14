@@ -1094,7 +1094,7 @@ export const skyOddsAbi = [
 ] as const;
 
 export const skyOddsAddress =
-  "0x431119E3f9A2108B0D53BF3Ebbba057bFdF552d7" as const;
+  "0x2b52ca412B509F0deA4870e1d13Ff33cAC7f073C" as const;
 
 export const skyOddsConfig = {
   address: skyOddsAddress,
