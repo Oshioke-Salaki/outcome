@@ -6,7 +6,7 @@ import "../src/SkyOdds.sol";
 import "../src/mock/MockERC20.sol";
 
 contract TestResolution is Script {
-    address constant SKYODDS_ADDRESS = 0x431119E3f9A2108B0D53BF3Ebbba057bFdF552d7;
+    address constant SKYODDS_ADDRESS = 0x2b52ca412B509F0deA4870e1d13Ff33cAC7f073C;
     bytes32 constant FLIGHT_ID = 0x2e251cc3973af2232e0b0f806c529ab96bdc66b87716f38334efa4673d1bd1de;
 
     function run() external {

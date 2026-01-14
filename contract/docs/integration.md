@@ -3,7 +3,7 @@
 ## Contract Addresses
 
 **Mantle Testnet:**
-- **SkyOdds Market:** `0x431119E3f9A2108B0D53BF3Ebbba057bFdF552d7`
+- **SkyOdds Market:** `0x2b52ca412B509F0deA4870e1d13Ff33cAC7f073C`
 - **Mock USDC Token:** `0xAB6a56DA5c42976953FE245F478f0b183B2479BF`
 - **Chain ID:** `5003`
 - **RPC URL:** `https://rpc.testnet.mantle.xyz`

@@ -67,7 +67,7 @@ contract SkyOdds is Ownable, ReentrancyGuard, Pausable, AccessControl {
     uint256 public constant PLATFORM_FEE = 200; // 2% in basis points
     uint256 public constant BASIS_POINTS = 10000;
     uint256 public constant DEFAULT_LIQUIDITY_PARAM = 100e6; // 100 USDC (6 decimals)
-    uint256 public constant MARKET_CLOSE_BUFFER = 30 minutes;
+    uint256 public constant MARKET_CLOSE_BUFFER = 1 minutes; // TODO return to 30 minutes
 
     mapping(bytes32 => Flight) public flights;
     mapping(bytes32 => mapping(address => UserPosition)) private positions;

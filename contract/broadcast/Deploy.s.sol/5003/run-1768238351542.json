@@ -22,7 +22,7 @@
       "hash": "0x0623ea01ab9bbb18520955bd4200ed8ad1bacbb58516cb7fd165159e403f6483",
       "transactionType": "CREATE",
       "contractName": "SkyOdds",
-      "contractAddress": "0x431119E3f9A2108B0D53BF3Ebbba057bFdF552d7",
+      "contractAddress": "0x2b52ca412B509F0deA4870e1d13Ff33cAC7f073C",
       "function": null,
       "arguments": [
         "0xAB6a56DA5c42976953FE245F478f0b183B2479BF",
@@ -100,7 +100,7 @@
       "cumulativeGasUsed": "0x3229205e9",
       "logs": [
         {
-          "address": "0x431119E3f9A2108B0D53BF3Ebbba057bFdF552d7",
+          "address": "0x2b52ca412B509F0deA4870e1d13Ff33cAC7f073C",
           "topics": [
             "0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0",
             "0x0000000000000000000000000000000000000000000000000000000000000000",
@@ -116,7 +116,7 @@
           "removed": false
         },
         {
-          "address": "0x431119E3f9A2108B0D53BF3Ebbba057bFdF552d7",
+          "address": "0x2b52ca412B509F0deA4870e1d13Ff33cAC7f073C",
           "topics": [
             "0x2f8788117e7eff1d82e926ec794901d17c78024a50270940304540a733656f0d",
             "0x0000000000000000000000000000000000000000000000000000000000000000",
@@ -133,7 +133,7 @@
           "removed": false
         },
         {
-          "address": "0x431119E3f9A2108B0D53BF3Ebbba057bFdF552d7",
+          "address": "0x2b52ca412B509F0deA4870e1d13Ff33cAC7f073C",
           "topics": [
             "0x2f8788117e7eff1d82e926ec794901d17c78024a50270940304540a733656f0d",
             "0xa49807205ce4d355092ef5a8a18f56e8913cf4a201fbe287825b095693c21775",
@@ -160,7 +160,7 @@
       "effectiveGasPrice": "0x132b3a0",
       "from": "0x5c24d44ea5c8324f71b5147d9aac500a90526750",
       "to": null,
-      "contractAddress": "0x431119E3f9A2108B0D53BF3Ebbba057bFdF552d7",
+      "contractAddress": "0x2b52ca412B509F0deA4870e1d13Ff33cAC7f073C",
       "l1Fee": "0x1f86a22ae9d34a",
       "l1FeeScalar": "0.01",
       "l1GasPrice": "0x388c3856",
